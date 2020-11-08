@@ -57,7 +57,7 @@ public struct InputData: Equatable {
     var providerID: String
 }
 
-public enum OAuthError {
+public enum OAuthError: Error {
     case InvalidCredential
 }
 
@@ -67,9 +67,9 @@ public protocol OAuthFlowOperations {
         providerID: String,
         identityToken: String,
         nonce: String
-    ) -> Result<OAuthState, Error>
+    ) -> Result<Void, OAuthError>
     
-    func signOut() -> Result<Void, Error>
+    func signOut() -> Result<Void, OAuthError>
 }
 
 // MARK: - MIDDLEWARE
