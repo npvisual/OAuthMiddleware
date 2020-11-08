@@ -63,12 +63,7 @@ public enum OAuthError: Error {
 
 // MARK: - PROTOCOL
 public protocol OAuthFlowOperations {
-    func signIn(
-        providerID: String,
-        identityToken: String,
-        nonce: String
-    ) -> Result<Void, OAuthError>
-    
+    func signIn(providerID: String, identityToken: String, nonce: String) -> Result<Void, OAuthError>
     func signOut() -> Result<Void, OAuthError>
 }
 
