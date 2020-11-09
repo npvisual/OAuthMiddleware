@@ -1,5 +1,6 @@
 import Foundation
 import SwiftRex
+import os.log
 
 // MARK: - ACTIONS
 //sourcery: Prism
@@ -73,6 +74,8 @@ public class OAuthMiddleware: Middleware {
     public typealias OutputActionType = OAuthAction
     public typealias StateType = OAuthState
     
+    private static let logger = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "OauthMiddleware")
+
     private var output: AnyActionHandler<OutputActionType>? = nil
     private var getState: () -> StateType = {  StateType.empty }
 
@@ -93,25 +96,66 @@ public class OAuthMiddleware: Middleware {
         from dispatcher: ActionSource,
         afterReducer : inout AfterReducer
     ) {
-        let state = getState()
         switch action {
-        case .signIn:
-            if let providerID = state.inputData?.providerID,
-               let identityToken = state.inputData?.identityToken,
-               let nonce = state.inputData?.nonce {
-                let result = provider.signIn(
-                    providerID: providerID,
-                    identityToken: identityToken,
-                    nonce: nonce
+        case .signOut:
+            let result = provider.signOut()
+            switch result {
+            case .success: output?.dispatch(.success)
+            case .failure:
+                os_log(
+                    "Failure to sign out...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
                 )
-                switch result {
-                case .success: output?.dispatch(.success)
-                case .failure: output?.dispatch(.failure)
-                }
+                output?.dispatch(.failure)
             }
-        case .signOut: return
         default:
             return
+        }
+
+        afterReducer = .do { [self] in
+            let newState = getState()
+            os_log(
+                "Calling afterReducer closure...",
+                log: OAuthMiddleware.logger,
+                type: .debug
+            )
+            switch action {
+            case .signIn:
+                if let providerID = newState.inputData?.providerID,
+                   let identityToken = newState.inputData?.identityToken,
+                   let nonce = newState.inputData?.nonce {
+                    os_log(
+                        "About to exchange identity token...",
+                        log: OAuthMiddleware.logger,
+                        type: .debug
+                    )
+                    let result = provider.signIn(
+                        providerID: providerID,
+                        identityToken: identityToken,
+                        nonce: nonce
+                    )
+                    switch result {
+                    case .success:
+                        os_log(
+                            "Identity token exchange successful...",
+                            log: OAuthMiddleware.logger,
+                            type: .debug
+                        )
+                        output?.dispatch(.success)
+                    case .failure:
+                        os_log(
+                            "Identity token exchange failed...",
+                            log: OAuthMiddleware.logger,
+                            type: .debug
+                        )
+                        output?.dispatch(.failure)
+                    }
+                }
+            case .signOut: return
+            default:
+                return
+            }
         }
     }
 }
