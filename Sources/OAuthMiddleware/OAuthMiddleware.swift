@@ -74,7 +74,7 @@ public class OAuthMiddleware: Middleware {
     public typealias OutputActionType = OAuthAction
     public typealias StateType = OAuthState
     
-    private static let logger = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "OauthMiddleware")
+    private static let logger = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "OAuthMiddleware")
 
     private var output: AnyActionHandler<OutputActionType>? = nil
     private var getState: () -> StateType = {  StateType.empty }
@@ -86,6 +86,11 @@ public class OAuthMiddleware: Middleware {
     }
     
     public func receiveContext(getState: @escaping GetState<StateType>, output: AnyActionHandler<OutputActionType>) {
+        os_log(
+            "Receiving context...",
+            log: OAuthMiddleware.logger,
+            type: .debug
+        )
         self.getState = getState
         self.output = output
 
