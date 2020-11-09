@@ -18,7 +18,7 @@ public struct OAuthState: Equatable {
     var inputData: InputData? = nil
     var error: OAuthError? = nil
     
-    static let empty: OAuthState = .init(userData: UserState())
+    public static let empty: OAuthState = .init(userData: UserState())
     
     public init(
         userData: UserState,
