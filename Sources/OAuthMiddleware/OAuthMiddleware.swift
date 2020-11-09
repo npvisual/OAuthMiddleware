@@ -53,9 +53,9 @@ public struct MetadataState: Equatable {
 }
 
 public struct InputData: Equatable {
-    var identityToken: String
-    var nonce: String
-    var providerID: String
+    public var identityToken: String
+    public var nonce: String
+    public var providerID: String
 }
 
 public enum OAuthError: Error {
