@@ -3,6 +3,7 @@ import SwiftRex
 import Combine
 
 // MARK: - ACTIONS
+//sourcery: Prism
 public enum OAuthAction {
     case signIn
     case signOut
