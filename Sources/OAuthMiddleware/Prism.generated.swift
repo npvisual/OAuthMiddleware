@@ -33,21 +33,40 @@ extension OAuthAction {
         self.signOut != nil
     }
 
-    public var success: Void? {
+    public var loggedIn: Bool? {
         get {
-            guard case .success = self else { return nil }
+            guard case let .loggedIn(associatedValue0) = self else { return nil }
+            return (associatedValue0)
+        }
+        set {
+            guard case .loggedIn = self, let newValue = newValue else { return }
+            self = .loggedIn(newValue)
+        }
+    }
+
+    public var isLoggedIn: Bool {
+        self.loggedIn != nil
+    }
+
+    public var loggedOut: Void? {
+        get {
+            guard case .loggedOut = self else { return nil }
             return ()
         }
     }
 
-    public var isSuccess: Bool {
-        self.success != nil
+    public var isLoggedOut: Bool {
+        self.loggedOut != nil
     }
 
-    public var failure: Void? {
+    public var failure: OAuthError? {
         get {
-            guard case .failure = self else { return nil }
-            return ()
+            guard case let .failure(associatedValue0) = self else { return nil }
+            return (associatedValue0)
+        }
+        set {
+            guard case .failure = self, let newValue = newValue else { return }
+            self = .failure(newValue)
         }
     }
 

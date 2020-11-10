@@ -1,5 +1,6 @@
 import Foundation
 import SwiftRex
+import Combine
 import os.log
 
 // MARK: - ACTIONS
@@ -7,7 +8,8 @@ import os.log
 public enum OAuthAction {
     case signIn
     case signOut
-    case success(Bool)
+    case loggedIn(Bool)
+    case loggedOut
     case failure(OAuthError)
 }
 
@@ -115,8 +117,8 @@ public enum OAuthError: Error {
 
 // MARK: - PROTOCOL
 public protocol OAuthFlowOperations {
-    func signIn(providerID: String, identityToken: String, nonce: String) -> Result<Bool, OAuthError>
-    func signOut() -> Result<Void, OAuthError>
+    func signIn(providerID: String, identityToken: String, nonce: String) -> AnyPublisher<Bool, OAuthError>
+    func signOut() -> AnyPublisher<Void, OAuthError>
 }
 
 // MARK: - MIDDLEWARE
@@ -131,7 +133,10 @@ public class OAuthMiddleware: Middleware {
     private var getState: () -> StateType = {  StateType.empty }
 
     private var provider: OAuthFlowOperations
-    
+
+    private var signOutCancellable: AnyCancellable?
+    private var signInCancellable: AnyCancellable?
+
     public init(provider: OAuthFlowOperations) {
         self.provider = provider
     }
@@ -154,23 +159,22 @@ public class OAuthMiddleware: Middleware {
     ) {
         switch action {
         case .signOut:
-            let result = provider.signOut()
-            switch result {
-            case .success:
-                os_log(
-                    "Successfully signed out...",
-                    log: OAuthMiddleware.logger,
-                    type: .debug
-                )
-                break
-            case .failure:
-                os_log(
-                    "Failure to sign out...",
-                    log: OAuthMiddleware.logger,
-                    type: .debug
-                )
-                output?.dispatch(.failure(.LogoutFailure))
-            }
+            signOutCancellable = provider.signOut()
+                .sink { [self] completion in
+                    os_log(
+                        "Failure to sign out...",
+                        log: OAuthMiddleware.logger,
+                        type: .debug
+                    )
+                    output?.dispatch(.failure(.LogoutFailure))
+                } receiveValue: { [self] _ in
+                    os_log(
+                        "Successfully signed out...",
+                        log: OAuthMiddleware.logger,
+                        type: .debug
+                    )
+                    output?.dispatch(.loggedOut)
+                }
         default:
             os_log(
                 "Not handling this case : %s ...",
@@ -203,26 +207,28 @@ public class OAuthMiddleware: Middleware {
                         log: OAuthMiddleware.logger,
                         type: .debug
                     )
-                    let result = provider.signIn(
+                    signInCancellable = provider.signIn(
                         providerID: providerID,
                         identityToken: identityToken,
                         nonce: nonce
-                    )
-                    switch result {
-                    case let .success(firsttimer):
+                    ).sink { (completion: Subscribers.Completion<OAuthError>) in
+                        switch completion {
+                        case let .failure(error):
+                            os_log(
+                                "Identity token exchange failed...",
+                                log: OAuthMiddleware.logger,
+                                type: .debug
+                            )
+                            output?.dispatch(.failure(error))
+                        default: break
+                        }
+                    } receiveValue: { (value: Bool) in
                         os_log(
                             "Identity token exchange successful...",
                             log: OAuthMiddleware.logger,
                             type: .debug
                         )
-                        output?.dispatch(.success(firsttimer))
-                    case let .failure(error):
-                        os_log(
-                            "Identity token exchange failed...",
-                            log: OAuthMiddleware.logger,
-                            type: .debug
-                        )
-                        output?.dispatch(.failure(error))
+                        output?.dispatch(.loggedIn(value))
                     }
                 } else {
                     os_log(
