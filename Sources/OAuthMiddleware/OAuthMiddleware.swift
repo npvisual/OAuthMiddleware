@@ -32,6 +32,12 @@ public struct OAuthState: Equatable {
         self.metadata = metadata
         self.inputData = inputData
     }
+    
+    public init(
+        error: OAuthError
+    ) {
+        self.error = error
+    }
 }
 
 public struct UserState: Equatable {
