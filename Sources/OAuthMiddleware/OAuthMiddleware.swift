@@ -166,6 +166,13 @@ public class OAuthMiddleware: Middleware {
                         )
                         output?.dispatch(.failure)
                     }
+                } else {
+                    os_log(
+                        "Something went wrong...",
+                        log: OAuthMiddleware.logger,
+                        type: .debug
+                    )
+                    output?.dispatch(.failure)
                 }
             case .signOut:
                 os_log(
