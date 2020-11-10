@@ -56,6 +56,16 @@ public struct InputData: Equatable {
     public var identityToken: String
     public var nonce: String
     public var providerID: String
+    
+    public init(
+        identityToken: String,
+        nonce: String,
+        providerID: String
+    ) {
+        self.identityToken = identityToken
+        self.nonce = nonce
+        self.providerID = providerID
+    }
 }
 
 public enum OAuthError: Error {
