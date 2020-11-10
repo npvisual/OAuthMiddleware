@@ -115,7 +115,12 @@ public class OAuthMiddleware: Middleware {
                 output?.dispatch(.failure)
             }
         default:
-            return
+            os_log(
+                "Not handling this case...",
+                log: OAuthMiddleware.logger,
+                type: .debug
+            )
+            break
         }
 
         afterReducer = .do { [self] in
