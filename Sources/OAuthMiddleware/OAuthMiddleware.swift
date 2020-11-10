@@ -162,9 +162,20 @@ public class OAuthMiddleware: Middleware {
                         output?.dispatch(.failure)
                     }
                 }
-            case .signOut: return
+            case .signOut:
+                os_log(
+                    "Just signing out...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
+                break
             default:
-                return
+                os_log(
+                    "Apparently not handling this one either...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
+                break
             }
         }
     }
