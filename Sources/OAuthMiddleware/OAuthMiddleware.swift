@@ -13,16 +13,16 @@ public enum OAuthAction {
 
 // MARK: - STATE
 public struct OAuthState: Equatable {
-    var userData: UserState
+    var userData: UserState? = nil
     var providerData: [UserState]? = nil
     var metadata: MetadataState? = nil
     public var inputData: InputData? = nil
     var error: OAuthError? = nil
     
-    public static let empty: OAuthState = .init(userData: UserState())
+    public static let empty: OAuthState = .init()
     
     public init(
-        userData: UserState,
+        userData: UserState? = nil,
         providerData: [UserState]? = nil,
         metadata: MetadataState? = nil,
         inputData: InputData? = nil
@@ -45,17 +45,49 @@ public struct UserState: Equatable {
     var profile: [String: NSObject]? = nil
     var username: String? = nil
     var isNewUser: Bool? = nil
+    
+    public init(
+        providerID: String,
+        uid: String,
+        displayName: String? = nil,
+        photoURL: URL? = nil,
+        email: String? = nil,
+        phoneNumber: String? = nil,
+        tenantID: String? = nil,
+        profile: [String: NSObject]? = nil,
+        username: String? = nil,
+        isNewUser: Bool = false
+    ) {
+        self.providerID = providerID
+        self.uid = uid
+        self.displayName = displayName
+        self.photoURL = photoURL
+        self.email = email
+        self.phoneNumber = phoneNumber
+        self.tenantID = tenantID
+        self.profile = profile
+        self.username = username
+        self.isNewUser = isNewUser
+    }
 }
 
 public struct MetadataState: Equatable {
     var lastSignInDate: Date?
     var creationDate: Date?
+    
+    public init(
+        lastSignInDate: Date? = nil,
+        creationDate: Date? = nil
+    ) {
+        self.lastSignInDate = lastSignInDate
+        self.creationDate = creationDate
+    }
 }
 
 public struct InputData: Equatable {
-    public var identityToken: String
-    public var nonce: String
-    public var providerID: String
+    var identityToken: String
+    var nonce: String
+    var providerID: String
     
     public init(
         identityToken: String,
