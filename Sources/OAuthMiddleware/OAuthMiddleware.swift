@@ -7,7 +7,7 @@ import os.log
 public enum OAuthAction {
     case signIn
     case signOut
-    case success
+    case success(Bool)
     case failure
 }
 
@@ -106,7 +106,7 @@ public enum OAuthError: Error {
 
 // MARK: - PROTOCOL
 public protocol OAuthFlowOperations {
-    func signIn(providerID: String, identityToken: String, nonce: String) -> Result<Void, OAuthError>
+    func signIn(providerID: String, identityToken: String, nonce: String) -> Result<Bool, OAuthError>
     func signOut() -> Result<Void, OAuthError>
 }
 
@@ -147,7 +147,7 @@ public class OAuthMiddleware: Middleware {
         case .signOut:
             let result = provider.signOut()
             switch result {
-            case .success: output?.dispatch(.success)
+            case .success: output?.dispatch(.success(false))
             case .failure:
                 os_log(
                     "Failure to sign out...",
@@ -193,13 +193,13 @@ public class OAuthMiddleware: Middleware {
                         nonce: nonce
                     )
                     switch result {
-                    case .success:
+                    case let .success(firsttimer):
                         os_log(
                             "Identity token exchange successful...",
                             log: OAuthMiddleware.logger,
                             type: .debug
                         )
-                        output?.dispatch(.success)
+                        output?.dispatch(.success(firsttimer))
                     case .failure:
                         os_log(
                             "Identity token exchange failed...",
