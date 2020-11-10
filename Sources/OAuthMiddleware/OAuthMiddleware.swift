@@ -132,6 +132,11 @@ public class OAuthMiddleware: Middleware {
             )
             switch action {
             case .signIn:
+                os_log(
+                    "Sign-in with OAuth...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
                 if let providerID = newState.inputData?.providerID,
                    let identityToken = newState.inputData?.identityToken,
                    let nonce = newState.inputData?.nonce {
