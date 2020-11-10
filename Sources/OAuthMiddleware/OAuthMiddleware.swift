@@ -8,7 +8,7 @@ public enum OAuthAction {
     case signIn
     case signOut
     case success(Bool)
-    case failure
+    case failure(OAuthError)
 }
 
 // MARK: - STATE
@@ -102,6 +102,9 @@ public struct InputData: Equatable {
 
 public enum OAuthError: Error {
     case InvalidCredential
+    case LogoutFailure
+    case OperationNotAllowed
+    case UserDisabled
 }
 
 // MARK: - PROTOCOL
@@ -147,20 +150,27 @@ public class OAuthMiddleware: Middleware {
         case .signOut:
             let result = provider.signOut()
             switch result {
-            case .success: output?.dispatch(.success(false))
+            case .success:
+                os_log(
+                    "Successfully signed out...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
+                break
             case .failure:
                 os_log(
                     "Failure to sign out...",
                     log: OAuthMiddleware.logger,
                     type: .debug
                 )
-                output?.dispatch(.failure)
+                output?.dispatch(.failure(.LogoutFailure))
             }
         default:
             os_log(
-                "Not handling this case...",
+                "Not handling this case : %s ...",
                 log: OAuthMiddleware.logger,
-                type: .debug
+                type: .debug,
+                String(describing: action)
             )
             break
         }
@@ -200,13 +210,13 @@ public class OAuthMiddleware: Middleware {
                             type: .debug
                         )
                         output?.dispatch(.success(firsttimer))
-                    case .failure:
+                    case let .failure(error):
                         os_log(
                             "Identity token exchange failed...",
                             log: OAuthMiddleware.logger,
                             type: .debug
                         )
-                        output?.dispatch(.failure)
+                        output?.dispatch(.failure(error))
                     }
                 } else {
                     os_log(
@@ -214,7 +224,7 @@ public class OAuthMiddleware: Middleware {
                         log: OAuthMiddleware.logger,
                         type: .debug
                     )
-                    output?.dispatch(.failure)
+                    output?.dispatch(.failure(.InvalidCredential))
                 }
             case .signOut:
                 os_log(
@@ -225,9 +235,10 @@ public class OAuthMiddleware: Middleware {
                 break
             default:
                 os_log(
-                    "Apparently not handling this one either...",
+                    "Apparently not handling this case either : %s...",
                     log: OAuthMiddleware.logger,
-                    type: .debug
+                    type: .debug,
+                    String(describing: action)
                 )
                 break
             }
