@@ -137,6 +137,7 @@ public class OAuthMiddleware: Middleware {
 
     private var signOutCancellable: AnyCancellable?
     private var signInCancellable: AnyCancellable?
+    private var stateChangeCancellable: AnyCancellable?
 
     public init(provider: OAuthFlowOperations) {
         self.provider = provider
@@ -150,7 +151,21 @@ public class OAuthMiddleware: Middleware {
         )
         self.getState = getState
         self.output = output
-
+        self.stateChangeCancellable = provider
+            .stateChanged()
+            .sink { (completion: Subscribers.Completion<OAuthError>) in
+                os_log(
+                    "State change completion...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
+            } receiveValue: { _ in
+                os_log(
+                    "State change receiving value...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
+            }
     }
     
     public func handle(
