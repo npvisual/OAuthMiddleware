@@ -154,10 +154,15 @@ public class OAuthMiddleware: Middleware {
         self.stateChangeCancellable = provider
             .stateChanged()
             .sink { (completion: Subscribers.Completion<OAuthError>) in
+                var result: String = "success"
+                if case Subscribers.Completion.failure = completion {
+                    result = "failure"
+                }
                 os_log(
-                    "State change completion...",
+                    "State change completion with %s...",
                     log: OAuthMiddleware.logger,
-                    type: .debug
+                    type: .debug,
+                    result
                 )
             } receiveValue: { _ in
                 os_log(
