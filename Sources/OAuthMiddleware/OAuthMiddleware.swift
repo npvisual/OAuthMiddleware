@@ -119,6 +119,7 @@ public enum OAuthError: Error {
 public protocol OAuthFlowOperations {
     func signIn(providerID: String, identityToken: String, nonce: String) -> AnyPublisher<Bool, OAuthError>
     func signOut() -> AnyPublisher<Void, OAuthError>
+    func stateChanged() -> AnyPublisher<Void, OAuthError>
 }
 
 // MARK: - MIDDLEWARE
