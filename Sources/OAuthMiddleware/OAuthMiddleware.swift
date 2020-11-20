@@ -172,6 +172,7 @@ public class OAuthMiddleware: Middleware {
                     type: .debug,
                     String(describing: user.userData?.uid)
                 )
+                self.output?.dispatch(.loggedIn(user))
             }
     }
     
