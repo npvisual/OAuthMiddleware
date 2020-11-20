@@ -6,7 +6,7 @@ import os.log
 // MARK: - ACTIONS
 //sourcery: Prism
 public enum OAuthAction {
-    case signIn
+    case signIn(InputData)
     case signOut
     case loggedIn(OAuthState)
     case loggedOut
@@ -20,7 +20,6 @@ public struct OAuthState: Equatable {
     var metadata: MetadataState? = nil
     var tenantID: String? = nil
     public var isNewUser: Bool? = nil
-    public var inputData: InputData? = nil
     var error: OAuthError? = nil
     
     public static let empty: OAuthState = .init()
@@ -30,15 +29,13 @@ public struct OAuthState: Equatable {
         providerData: [OAuthUserState]? = nil,
         metadata: MetadataState? = nil,
         tenantID: String? = nil,
-        isNewUser: Bool = false,
-        inputData: InputData? = nil
+        isNewUser: Bool = false
         ) {
         self.userData = userData
         self.providerData = providerData
         self.metadata = metadata
         self.tenantID = tenantID
         self.isNewUser = isNewUser
-        self.inputData = inputData
     }
     
     public init(
@@ -182,71 +179,52 @@ public class OAuthMiddleware: Middleware {
         afterReducer : inout AfterReducer
     ) {
         switch action {
-        case .signOut:
-            signOutCancellable = provider.signOut()
-                .sink { [self] completion in
-                    os_log(
-                        "Failure to sign out...",
-                        log: OAuthMiddleware.logger,
-                        type: .debug
-                    )
-                    output?.dispatch(.failure(.LogoutFailure))
-                } receiveValue: { [self] _ in
-                    os_log(
-                        "Successfully signed out...",
-                        log: OAuthMiddleware.logger,
-                        type: .debug
-                    )
-                    output?.dispatch(.loggedOut)
-                }
-        default:
-            os_log(
-                "Not handling this case : %s ...",
-                log: OAuthMiddleware.logger,
-                type: .debug,
-                String(describing: action)
-            )
-            break
-        }
-
-        afterReducer = .do { [self] in
-            let newState = getState()
-            os_log(
-                "Calling afterReducer closure...",
-                log: OAuthMiddleware.logger,
-                type: .debug
-            )
-            switch action {
-            case .signIn:
+            case .signOut:
+                signOutCancellable = provider.signOut()
+                    .sink { [self] completion in
+                        os_log(
+                            "Failure to sign out...",
+                            log: OAuthMiddleware.logger,
+                            type: .debug
+                        )
+                        output?.dispatch(.failure(.LogoutFailure))
+                    } receiveValue: { [self] _ in
+                        os_log(
+                            "Successfully signed out...",
+                            log: OAuthMiddleware.logger,
+                            type: .debug
+                        )
+                        output?.dispatch(.loggedOut)
+                    }
+            case let .signIn(data):
                 os_log(
                     "Sign-in with OAuth...",
                     log: OAuthMiddleware.logger,
                     type: .debug
                 )
-                if let providerID = newState.inputData?.providerID,
-                   let identityToken = newState.inputData?.identityToken,
-                   let nonce = newState.inputData?.nonce {
-                    os_log(
-                        "About to exchange identity token...",
-                        log: OAuthMiddleware.logger,
-                        type: .debug
+                os_log(
+                    "About to exchange identity token...",
+                    log: OAuthMiddleware.logger,
+                    type: .debug
+                )
+                signInCancellable = provider
+                    .signIn(
+                        providerID: data.providerID,
+                        identityToken: data.identityToken,
+                        nonce: data.nonce
                     )
-                    signInCancellable = provider.signIn(
-                        providerID: providerID,
-                        identityToken: identityToken,
-                        nonce: nonce
-                    ).sink { (completion: Subscribers.Completion<OAuthError>) in
+                    .sink { [self] (completion: Subscribers.Completion<OAuthError>) in
                         switch completion {
-                        case let .failure(error):
-                            os_log(
-                                "Identity token exchange failed...",
-                                log: OAuthMiddleware.logger,
-                                type: .debug
-                            )
-                            output?.dispatch(.failure(error))
-                        default: break
+                            case let .failure(error):
+                                os_log(
+                                    "Identity token exchange failed...",
+                                    log: OAuthMiddleware.logger,
+                                    type: .debug
+                                )
+                                output?.dispatch(.failure(error))
+                            default: break
                         }
-                    } receiveValue: { (value: OAuthState) in
+                    } receiveValue: { [self] (value: OAuthState) in
                         os_log(
                             "Identity token exchange successful...",
                             log: OAuthMiddleware.logger,
@@ -254,30 +232,14 @@ public class OAuthMiddleware: Middleware {
                         )
                         output?.dispatch(.loggedIn(value))
                     }
-                } else {
-                    os_log(
-                        "Something went wrong...",
-                        log: OAuthMiddleware.logger,
-                        type: .debug
-                    )
-                    output?.dispatch(.failure(.InvalidCredential))
-                }
-            case .signOut:
-                os_log(
-                    "Just signing out...",
-                    log: OAuthMiddleware.logger,
-                    type: .debug
-                )
-                break
             default:
                 os_log(
-                    "Apparently not handling this case either : %s...",
+                    "Not handling this case : %s ...",
                     log: OAuthMiddleware.logger,
                     type: .debug,
                     String(describing: action)
                 )
                 break
-            }
         }
     }
 }
