@@ -19,8 +19,8 @@ public struct OAuthState: Equatable {
     var providerData: [OAuthUserState]? = nil
     var metadata: MetadataState? = nil
     var tenantID: String? = nil
-    var nonce: String? = nil
-    var providerID: String? = nil
+    public var nonce: String? = nil
+    public var providerID: String? = nil
     public var isNewUser: Bool? = nil
     var error: OAuthError? = nil
     
