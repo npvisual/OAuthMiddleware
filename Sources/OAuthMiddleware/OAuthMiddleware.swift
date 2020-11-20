@@ -18,6 +18,7 @@ public struct OAuthState: Equatable {
     var userData: OAuthUserState? = nil
     var providerData: [OAuthUserState]? = nil
     var metadata: MetadataState? = nil
+    var tenantID: String? = nil
     public var inputData: InputData? = nil
     var error: OAuthError? = nil
     
@@ -27,11 +28,13 @@ public struct OAuthState: Equatable {
         userData: OAuthUserState? = nil,
         providerData: [OAuthUserState]? = nil,
         metadata: MetadataState? = nil,
+        tenantID: String? = nil,
         inputData: InputData? = nil
         ) {
         self.userData = userData
         self.providerData = providerData
         self.metadata = metadata
+        self.tenantID = tenantID
         self.inputData = inputData
     }
     
@@ -49,7 +52,6 @@ public struct OAuthUserState: Equatable {
     var photoURL: URL? = nil
     var email: String? = nil
     var phoneNumber: String? = nil
-    var tenantID: String? = nil
     var profile: [String: NSObject]? = nil
     var username: String? = nil
     var isNewUser: Bool? = nil
@@ -72,7 +74,6 @@ public struct OAuthUserState: Equatable {
         self.photoURL = photoURL
         self.email = email
         self.phoneNumber = phoneNumber
-        self.tenantID = tenantID
         self.profile = profile
         self.username = username
         self.isNewUser = isNewUser
