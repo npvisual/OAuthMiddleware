@@ -19,6 +19,7 @@ public struct OAuthState: Equatable {
     var providerData: [OAuthUserState]? = nil
     var metadata: MetadataState? = nil
     var tenantID: String? = nil
+    public var isNewUser: Bool? = nil
     public var inputData: InputData? = nil
     var error: OAuthError? = nil
     
@@ -29,12 +30,14 @@ public struct OAuthState: Equatable {
         providerData: [OAuthUserState]? = nil,
         metadata: MetadataState? = nil,
         tenantID: String? = nil,
+        isNewUser: Bool = false,
         inputData: InputData? = nil
         ) {
         self.userData = userData
         self.providerData = providerData
         self.metadata = metadata
         self.tenantID = tenantID
+        self.isNewUser = isNewUser
         self.inputData = inputData
     }
     
@@ -54,7 +57,6 @@ public struct OAuthUserState: Equatable {
     var phoneNumber: String? = nil
     var profile: [String: NSObject]? = nil
     var username: String? = nil
-    var isNewUser: Bool? = nil
     
     public init(
         providerID: String,
@@ -65,8 +67,7 @@ public struct OAuthUserState: Equatable {
         phoneNumber: String? = nil,
         tenantID: String? = nil,
         profile: [String: NSObject]? = nil,
-        username: String? = nil,
-        isNewUser: Bool = false
+        username: String? = nil
     ) {
         self.providerID = providerID
         self.uid = uid
@@ -76,7 +77,6 @@ public struct OAuthUserState: Equatable {
         self.phoneNumber = phoneNumber
         self.profile = profile
         self.username = username
-        self.isNewUser = isNewUser
     }
 }
 
