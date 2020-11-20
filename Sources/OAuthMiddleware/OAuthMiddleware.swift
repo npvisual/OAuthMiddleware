@@ -6,7 +6,7 @@ import os.log
 // MARK: - ACTIONS
 //sourcery: Prism
 public enum OAuthAction {
-    case signIn(InputData)
+    case signIn(String)
     case signOut
     case loggedIn(OAuthState)
     case loggedOut
@@ -19,6 +19,8 @@ public struct OAuthState: Equatable {
     var providerData: [OAuthUserState]? = nil
     var metadata: MetadataState? = nil
     var tenantID: String? = nil
+    var nonce: String? = nil
+    var providerID: String? = nil
     public var isNewUser: Bool? = nil
     var error: OAuthError? = nil
     
@@ -29,20 +31,20 @@ public struct OAuthState: Equatable {
         providerData: [OAuthUserState]? = nil,
         metadata: MetadataState? = nil,
         tenantID: String? = nil,
+        nonce: String? = nil,
+        providerID: String? = nil,
         isNewUser: Bool = false
         ) {
         self.userData = userData
         self.providerData = providerData
         self.metadata = metadata
         self.tenantID = tenantID
+        self.nonce = nonce
+        self.providerID =  providerID
         self.isNewUser = isNewUser
     }
     
-    public init(
-        error: OAuthError
-    ) {
-        self.error = error
-    }
+    public init(error: OAuthError) { self.error = error }
 }
 
 public struct OAuthUserState: Equatable {
@@ -87,22 +89,6 @@ public struct MetadataState: Equatable {
     ) {
         self.lastSignInDate = lastSignInDate
         self.creationDate = creationDate
-    }
-}
-
-public struct InputData: Equatable {
-    var identityToken: String
-    var nonce: String
-    var providerID: String
-    
-    public init(
-        identityToken: String,
-        nonce: String,
-        providerID: String
-    ) {
-        self.identityToken = identityToken
-        self.nonce = nonce
-        self.providerID = providerID
     }
 }
 
@@ -178,6 +164,7 @@ public class OAuthMiddleware: Middleware {
         from dispatcher: ActionSource,
         afterReducer : inout AfterReducer
     ) {
+        let state = getState()
         switch action {
             case .signOut:
                 signOutCancellable = provider.signOut()
@@ -207,31 +194,34 @@ public class OAuthMiddleware: Middleware {
                     log: OAuthMiddleware.logger,
                     type: .debug
                 )
-                signInCancellable = provider
-                    .signIn(
-                        providerID: data.providerID,
-                        identityToken: data.identityToken,
-                        nonce: data.nonce
-                    )
-                    .sink { [self] (completion: Subscribers.Completion<OAuthError>) in
-                        switch completion {
-                            case let .failure(error):
-                                os_log(
-                                    "Identity token exchange failed...",
-                                    log: OAuthMiddleware.logger,
-                                    type: .debug
-                                )
-                                output?.dispatch(.failure(error))
-                            default: break
-                        }
-                    } receiveValue: { [self] (value: OAuthState) in
-                        os_log(
-                            "Identity token exchange successful...",
-                            log: OAuthMiddleware.logger,
-                            type: .debug
+                if let providerID = state.providerID,
+                   let nonce = state.nonce {
+                    signInCancellable = provider
+                        .signIn(
+                            providerID: providerID,
+                            identityToken: data,
+                            nonce: nonce
                         )
-                        output?.dispatch(.loggedIn(value))
-                    }
+                        .sink { [self] (completion: Subscribers.Completion<OAuthError>) in
+                            switch completion {
+                                case let .failure(error):
+                                    os_log(
+                                        "Identity token exchange failed...",
+                                        log: OAuthMiddleware.logger,
+                                        type: .debug
+                                    )
+                                    output?.dispatch(.failure(error))
+                                default: break
+                            }
+                        } receiveValue: { [self] (value: OAuthState) in
+                            os_log(
+                                "Identity token exchange successful...",
+                                log: OAuthMiddleware.logger,
+                                type: .debug
+                            )
+                            output?.dispatch(.loggedIn(value))
+                        }
+                }
             default:
                 os_log(
                     "Not handling this case : %s ...",

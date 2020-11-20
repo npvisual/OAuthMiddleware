@@ -11,7 +11,7 @@ import AppKit
 #endif
 
 extension OAuthAction {
-    public var signIn: InputData? {
+    public var signIn: String? {
         get {
             guard case let .signIn(associatedValue0) = self else { return nil }
             return (associatedValue0)
