@@ -33,7 +33,7 @@ extension OAuthAction {
         self.signOut != nil
     }
 
-    public var loggedIn: Bool? {
+    public var loggedIn: OAuthState? {
         get {
             guard case let .loggedIn(associatedValue0) = self else { return nil }
             return (associatedValue0)

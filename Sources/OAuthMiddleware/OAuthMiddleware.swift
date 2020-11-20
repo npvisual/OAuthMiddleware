@@ -8,7 +8,7 @@ import os.log
 public enum OAuthAction {
     case signIn
     case signOut
-    case loggedIn(Bool)
+    case loggedIn(OAuthState)
     case loggedOut
     case failure(OAuthError)
 }
@@ -118,9 +118,9 @@ public enum OAuthError: Error {
 
 // MARK: - PROTOCOL
 public protocol OAuthFlowOperations {
-    func signIn(providerID: String, identityToken: String, nonce: String) -> AnyPublisher<Bool, OAuthError>
+    func signIn(providerID: String, identityToken: String, nonce: String) -> AnyPublisher<OAuthState, OAuthError>
     func signOut() -> AnyPublisher<Void, OAuthError>
-    func stateChanged() -> AnyPublisher<Void, OAuthError>
+    func stateChanged() -> AnyPublisher<OAuthState, OAuthError>
 }
 
 // MARK: - MIDDLEWARE
@@ -165,11 +165,12 @@ public class OAuthMiddleware: Middleware {
                     type: .debug,
                     result
                 )
-            } receiveValue: { _ in
+            } receiveValue: { user in
                 os_log(
-                    "State change receiving value...",
+                    "State change receiving value for user : %s...",
                     log: OAuthMiddleware.logger,
-                    type: .debug
+                    type: .debug,
+                    String(describing: user.userData?.uid)
                 )
             }
     }
@@ -244,7 +245,7 @@ public class OAuthMiddleware: Middleware {
                             output?.dispatch(.failure(error))
                         default: break
                         }
-                    } receiveValue: { (value: Bool) in
+                    } receiveValue: { (value: OAuthState) in
                         os_log(
                             "Identity token exchange successful...",
                             log: OAuthMiddleware.logger,
