@@ -11,14 +11,14 @@ import AppKit
 #endif
 
 extension OAuthAction {
-    public var signIn: String? {
+    public var signIn: (String, String, String)? {
         get {
-            guard case let .signIn(associatedValue0) = self else { return nil }
-            return (associatedValue0)
+            guard case let .signIn(associatedValue0, associatedValue1, associatedValue2) = self else { return nil }
+            return (associatedValue0, associatedValue1, associatedValue2)
         }
         set {
             guard case .signIn = self, let newValue = newValue else { return }
-            self = .signIn(newValue)
+            self = .signIn(newValue.0, newValue.1, newValue.2)
         }
     }
 
