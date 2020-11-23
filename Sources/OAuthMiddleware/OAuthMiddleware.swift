@@ -210,13 +210,17 @@ public class OAuthMiddleware: Middleware {
                                 output?.dispatch(.failure(error))
                             default: break
                         }
-                    } receiveValue: { [self] (value: OAuthState) in
+                    } receiveValue: { (value: OAuthState) in
+                        // We're already dispatching the proper action from the
+                        // stateChanged() signal, so we don't need to dispatch
+                        // a new one when we receive a value here. But we're
+                        // logging that event anyways.
                         os_log(
-                            "Identity token exchange successful...",
+                            "Identity token exchange successful for %s...",
                             log: OAuthMiddleware.logger,
-                            type: .debug
+                            type: .debug,
+                            String(describing: value.userData?.uid)
                         )
-                        output?.dispatch(.loggedIn(value))
                     }
             default:
                 os_log(
