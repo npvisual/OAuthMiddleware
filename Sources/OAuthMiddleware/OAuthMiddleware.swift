@@ -10,6 +10,7 @@ public enum OAuthAction {
     case signOut
     case loggedIn(OAuthState)
     case loggedOut
+    case registration
     case failure(OAuthError)
 }
 
@@ -210,17 +211,22 @@ public class OAuthMiddleware: Middleware {
                                 output?.dispatch(.failure(error))
                             default: break
                         }
-                    } receiveValue: { (value: OAuthState) in
+                    } receiveValue: { [self] (value: OAuthState) in
                         // We're already dispatching the proper action from the
                         // stateChanged() signal, so we don't need to dispatch
                         // a new one when we receive a value here. But we're
                         // logging that event anyways.
+                        // We, however, need to indicate if this is a new user
+                        // by dispatching the `.registration` action
                         os_log(
                             "Identity token exchange successful for %s...",
                             log: OAuthMiddleware.logger,
                             type: .debug,
                             String(describing: value.userData?.uid)
                         )
+                        if value.isNewUser ?? false {
+                            output?.dispatch(.registration)
+                        }
                     }
             default:
                 os_log(
