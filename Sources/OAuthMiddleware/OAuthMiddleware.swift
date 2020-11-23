@@ -162,12 +162,17 @@ public class OAuthMiddleware: Middleware {
             case .signOut:
                 signOutCancellable = provider.signOut()
                     .sink { [self] completion in
-                        os_log(
-                            "Failure to sign out...",
-                            log: OAuthMiddleware.logger,
-                            type: .debug
-                        )
-                        output?.dispatch(.failure(.LogoutFailure))
+                        switch completion {
+                            case let .failure(error):
+                                os_log(
+                                    "Failure to sign out with error : %s",
+                                    log: OAuthMiddleware.logger,
+                                    type: .debug,
+                                    String(describing: error)
+                                )
+                                output?.dispatch(.failure(.LogoutFailure))
+                            default: break
+                        }
                     } receiveValue: { [self] _ in
                         os_log(
                             "Successfully signed out...",
@@ -197,7 +202,7 @@ public class OAuthMiddleware: Middleware {
                         switch completion {
                             case let .failure(error):
                                 os_log(
-                                    "Identity token exchange failed with error...",
+                                    "Identity token exchange failed with error : %s",
                                     log: OAuthMiddleware.logger,
                                     type: .debug,
                                     String(describing: error)
