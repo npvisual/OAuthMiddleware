@@ -15,8 +15,8 @@ public enum OAuthAction {
 
 // MARK: - STATE
 public struct OAuthState: Equatable {
-    public var userData: OAuthUserState? = nil
-    var providerData: [OAuthUserState]? = nil
+    var userData: OAuthUserState? = nil
+    public var providerData: [OAuthUserState]? = nil
     var metadata: MetadataState? = nil
     var tenantID: String? = nil
     public var isNewUser: Bool? = nil
@@ -42,7 +42,7 @@ public struct OAuthState: Equatable {
 }
 
 public struct OAuthUserState: Equatable {
-    var providerID: String = ""
+    public var providerID: String = ""
     public var uid: String = ""
     var displayName: String? = nil
     var photoURL: URL? = nil
@@ -197,9 +197,10 @@ public class OAuthMiddleware: Middleware {
                         switch completion {
                             case let .failure(error):
                                 os_log(
-                                    "Identity token exchange failed...",
+                                    "Identity token exchange failed with error...",
                                     log: OAuthMiddleware.logger,
-                                    type: .debug
+                                    type: .debug,
+                                    String(describing: error)
                                 )
                                 output?.dispatch(.failure(error))
                             default: break
