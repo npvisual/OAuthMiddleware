@@ -30,7 +30,7 @@ public struct OAuthState: Equatable {
         providerData: [OAuthUserState]? = nil,
         metadata: MetadataState? = nil,
         tenantID: String? = nil,
-        isNewUser: Bool = false
+        isNewUser: Bool? = nil
         ) {
         self.userData = userData
         self.providerData = providerData
