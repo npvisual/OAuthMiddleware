@@ -16,12 +16,12 @@ public enum OAuthAction {
 
 // MARK: - STATE
 public struct OAuthState: Equatable {
-    var userData: OAuthUserState? = nil
+    public var userData: OAuthUserState? = nil
     public var providerData: [OAuthUserState]? = nil
-    var metadata: MetadataState? = nil
-    var tenantID: String? = nil
+    public var metadata: MetadataState? = nil
+    public var tenantID: String? = nil
     public var isNewUser: Bool? = nil
-    var error: OAuthError? = nil
+    public var error: OAuthError? = nil
     
     public static let empty: OAuthState = .init()
     
@@ -45,12 +45,12 @@ public struct OAuthState: Equatable {
 public struct OAuthUserState: Equatable {
     public var providerID: String = ""
     public var uid: String = ""
-    var displayName: String? = nil
-    var photoURL: URL? = nil
-    var email: String? = nil
-    var phoneNumber: String? = nil
-    var profile: [String: NSObject]? = nil
-    var username: String? = nil
+    public var displayName: String? = nil
+    public var photoURL: URL? = nil
+    public var email: String? = nil
+    public var phoneNumber: String? = nil
+    public var profile: [String: NSObject]? = nil
+    public var username: String? = nil
     
     public init(
         providerID: String,
@@ -75,8 +75,8 @@ public struct OAuthUserState: Equatable {
 }
 
 public struct MetadataState: Equatable {
-    var lastSignInDate: Date?
-    var creationDate: Date?
+    public var lastSignInDate: Date?
+    public var creationDate: Date?
     
     public init(
         lastSignInDate: Date? = nil,
