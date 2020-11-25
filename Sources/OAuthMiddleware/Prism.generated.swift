@@ -63,6 +63,17 @@ extension OAuthAction {
         self.loggedOut != nil
     }
 
+    public var registration: Void? {
+        get {
+            guard case .registration = self else { return nil }
+            return ()
+        }
+    }
+
+    public var isRegistration: Bool {
+        self.registration != nil
+    }
+
     public var failure: OAuthError? {
         get {
             guard case let .failure(associatedValue0) = self else { return nil }
